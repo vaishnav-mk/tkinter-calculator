@@ -37,8 +37,8 @@ class Calculator:
             1: (3, 1), 
             2: (3, 2), 
             3: (3, 3),
-            0: (4, 2), 
             '.': (4, 1),
+            0: (4, 2),
         }
         self.operations = {"/": "\u00F7", "*": "\u00D7", "-": "-", "+": "+"}
         self.errors = {
@@ -180,8 +180,9 @@ class Calculator:
     def equal_but(self):
         button = tk.Button(self.buttons_frame, text="=", bg=EQUAL_COLOUR, fg=EQUAL_LABEL_COLOR, font=DEFAULT_FONT,
                            borderwidth=0, command=self.evaluate)
-        
-        button.grid(row=4, column=3, columnspan=2, sticky=tk.NSEW, padx=1, pady=1)
+        max_row = max([x[0] for x in self.digit_pos.values()])
+        max_col = max([x[1] for x in self.digit_pos.values() if x[0] == max_row])
+        button.grid(row=max_row, column=max_col+1, columnspan=max_row-max_col, sticky=tk.NSEW, padx=1, pady=1)
 
     def create_buttons_frame(self):
         frame = tk.Frame(self.window, bg="black")
@@ -197,7 +198,7 @@ class Calculator:
             expression = expression.replace(operator, f' {symbol} ')
         self.total_label.config(text=expression)
 
-    def update_label(self, error=False):
+    def update_label(self, error=False):    
         if error:
             self.label.config(text=self.current_expression, font=ERROR_FONT)
         else:
