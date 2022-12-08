@@ -38,7 +38,10 @@ class Calculator:
             2: (3, 2), 
             3: (3, 3),
             '.': (4, 1),
-            0: (4, 2),
+            '%': (4, 2),
+            '(': (4, 3),
+            ')': (4, 4),
+            '&': (5, 1),
         }
         self.operations = {"/": "\u00F7", "*": "\u00D7", "-": "-", "+": "+"}
         self.errors = {
@@ -77,7 +80,7 @@ class Calculator:
         for child in self.buttons_frame.winfo_children():
             if child['text'] != '=':
                 child.bind("<Enter>", lambda event, child=child: child.config(bg=DIGIT_COLOURS if child['bg'] == SPECIAL_COLOUR else SPECIAL_COLOUR))
-                child.bind("<Leave>", lambda event, child=child: child.config(bg= DIGIT_COLOURS if child['text'] in '0123456789.' else SPECIAL_COLOUR))
+                child.bind("<Leave>", lambda event, child=child: child.config(bg= DIGIT_COLOURS if child['text'] in '0123456789' else SPECIAL_COLOUR))
 
     def create_sp_but(self):
         self.c_but()
@@ -109,7 +112,7 @@ class Calculator:
 
     def create_digit_but(self):
         for digit, grid_value in self.digit_pos.items():
-            button = tk.Button(self.buttons_frame, text=str(digit), bg=DIGIT_COLOURS, fg=TEXT_COLOR, font=DIGITS_FONT,
+            button = tk.Button(self.buttons_frame, text=str(digit), bg=DIGIT_COLOURS if str(digit).isnumeric() else SPECIAL_COLOUR, fg=TEXT_COLOR, font=DIGITS_FONT,
                                borderwidth=0, command=lambda x=digit: self.manipulate_expression(x))            
             button.grid(row=grid_value[0], column=grid_value[1], sticky=tk.NSEW, padx=1, pady=1)
 
@@ -144,7 +147,7 @@ class Calculator:
         self.update_label()
 
     def square_but(self):
-        button = tk.Button(self.buttons_frame, text="x\u00b2", bg=SPECIAL_COLOUR, fg=TEXT_COLOR, font=DEFAULT_FONT,
+        button = tk.Button(self.buttons_frame, text="=", bg=SPECIAL_COLOUR, fg=TEXT_COLOR, font=DEFAULT_FONT,
                            borderwidth=0, command=self.square)
         button.grid(row=0, column=2, sticky=tk.NSEW, padx=1, pady=1)
 
@@ -157,21 +160,26 @@ class Calculator:
                            borderwidth=0, command=self.sqrt)
         button.grid(row=0, column=3, sticky=tk.NSEW, padx=1, pady=1)
 
+        
     def evaluate(self):
         if self.current_expression == "":
             self.current_expression = "0"
         self.total_expression += self.current_expression
         self.update_total_label()
         try:
+            self.current_expression = str((eval, 0.1)(self.total_expression))
             self.current_expression = str(eval(self.total_expression))
             self.total_expression = ""
         except Exception as e:
             print(str(e))
             self.error = True
+            """"
             if (any(error in str(e) for error in self.errors)):
                 self.current_expression = self.errors[str(e)] 
             else:
                 self.current_expression = "Error"
+            """
+            self.current_expression = "Wow! You broke it!"
             self.total_expression = ""
 
         self.update_label(True)
@@ -182,7 +190,10 @@ class Calculator:
                            borderwidth=0, command=self.evaluate)
         max_row = max([x[0] for x in self.digit_pos.values()])
         max_col = max([x[1] for x in self.digit_pos.values() if x[0] == max_row])
-        button.grid(row=max_row, column=max_col+1, columnspan=max_row-max_col, sticky=tk.NSEW, padx=1, pady=1)
+        if (max_col-max_row == 0): 
+            button.grid(row=max_row+1, column=0, sticky=tk.NSEW, padx=1, pady=1, columnspan=max_row+1)
+        else:
+            button.grid(row=max_row, column=max_col+1, sticky=tk.NSEW, padx=1, pady=1, columnspan=max_row-max_col+1)
 
     def create_buttons_frame(self):
         frame = tk.Frame(self.window, bg="black")
